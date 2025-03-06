@@ -1,4 +1,3 @@
-import sys
 import argparse
 from pathlib import Path
 from lsp import Lsp
@@ -28,9 +27,6 @@ parser.add_argument('--no-trim', action='store_true', help=HELP_NO_TRIM)
 parser.add_argument('--ntsc', action='store_true', help=HELP_NTSC)
 parser.add_argument('--version', action='version', version=VERSION_STRING, help=HELP_VERSION)
 args = parser.parse_args()
-if args.version:
-    print(VERSION_STRING)
-    sys.exit()
 if not args.output_dir.is_dir():
     raise ValueError(f"Output path is not a directory or does not exist: {args.o}")
 if not args.quiet:
