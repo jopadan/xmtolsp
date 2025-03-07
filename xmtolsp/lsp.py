@@ -64,6 +64,8 @@ class LspSample:
             self.loop_start = 0
             self.loop_length = 0
             return
+        if smp.pcm16:
+            max_len *= 2
         # Check if downsampling is needed
         if not no_downsample and min_per < target_per:
             self.downsample_factor = min_per / target_per
