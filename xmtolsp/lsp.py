@@ -88,6 +88,9 @@ class LspSample:
         # effect. All that matters is the downsample factor from in to out.
         if smp.pcm16:
             data = bytes(tfm.build_array(input_array=np.frombuffer(data, np.dtype('int16').newbyteorder('<')), sample_rate_in=22050))
+            self.length //= 2
+            self.loop_start //= 2
+            self.loop_length //= 2
         elif self.downsample_factor < 1:
             data = bytes(tfm.build_array(input_array=np.frombuffer(data, np.int8), sample_rate_in=22050))
         self.length = int(self.length * self.downsample_factor) >> 1 << 1
