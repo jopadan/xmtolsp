@@ -1,6 +1,6 @@
 import argparse
 from pathlib import Path
-from lsp import Lsp
+from .lsp import Lsp
 
 VERSION_MAJOR = 0
 VERSION_MINOR = 1
@@ -13,7 +13,8 @@ HELP_OUTPUT = "specify output directory (default: current directory)"
 HELP_NTSC = "use NTSC clock rate (instead of PAL) when calculating Paula period"
 HELP_NO_TRIM = "do not trim any samples to their max playback position"
 HELP_NO_DOWNSAMPLE = "do not downsample any samples"
-HELP_MIN_PER = "specify Paula period that samples will be downsampled to, based on their highest note played (default: 124)"
+HELP_MIN_PER = "specify Paula period that samples' highest note will play at (default: 124)"
+HELP_OPTIMAL_PER = "specify target optimal Paula period that samples' lowest note will play at, if possible (default: 160)"
 HELP_QUIET = "run silently (do not output any text to stdout)"
 HELP_VERSION = "print xmtolsp version number and exit"
 
@@ -22,6 +23,7 @@ parser.add_argument('input_file', type=Path, help=HELP_INPUT_FILE)
 parser.add_argument('-q', '--quiet', action='store_true', help=HELP_QUIET)
 parser.add_argument('-o', dest='output_dir', type=Path, metavar='DIRECTORY', default=Path.cwd(), help=HELP_OUTPUT)
 parser.add_argument('--min-per', type=int, metavar='PERIOD', default=124, help=HELP_MIN_PER)
+parser.add_argument('--optimal-per', type=int, metavar='PERIOD', default=160, help=HELP_OPTIMAL_PER)
 parser.add_argument('--no-downsample', action='store_true', help=HELP_NO_DOWNSAMPLE)
 parser.add_argument('--no-trim', action='store_true', help=HELP_NO_TRIM)
 parser.add_argument('--ntsc', action='store_true', help=HELP_NTSC)

@@ -38,13 +38,14 @@ $ pip install -r requirements.txt
 ## Usage
 
 ```
-python xmtolsp [-h] [-q] [-o DIRECTORY] [--min-per PERIOD] [--no-downsample] [--no-trim] [--ntsc] [--version] input_file
+python -m xmtolsp [-h] [-q] [-o DIRECTORY] [--min-per PERIOD] [--optimal-per PERIOD] [--no-downsample] [--no-trim] [--ntsc] [--version] input_file
 ```
 
 - `input_file`: The input XM file.
 - `-q, --quiet`: Run silently (do not output any text to stdout).
 - `-o DIRECTORY`: Specify output directory (default: current directory).
-- `--min-per PERIOD`: Specify a Paula period that samples will be downsampled to. For each sample, the highest note it reaches will be played at this period. (default: 124)
+- `--min-per PERIOD`: Specify a Paula period that samples' highest note will be played at. Samples are downsampled such that they never play at a period lower than this one. (default: 124)
+- `--optimal-per PERIOD`: Specify a Paula period that samples' lowest note will be played at, if possible. However, if playing the lowest note at this period causes the highest note to be below `min_per`, then this parameter is ignored for that sample, and `min_per` is used instead. Set to 0 to disable. (default: 160).
 - `--no-downsample`: Do not perform any downsampling on samples.
 - `--no-trim`: Do not trim any samples to their max playback position. By default, xmtolsp trims sample data that is never reached during playback.
 - `--ntsc`: Use NTSC clock rate (instead of PAL) when calculating Paula period.
@@ -54,6 +55,7 @@ python xmtolsp [-h] [-q] [-o DIRECTORY] [--min-per PERIOD] [--no-downsample] [--
 
 - LSP special commands (set BPM, get/set position)
 - Per-sample settings for downsample amount, and whether to trim
+- Better trimming logic for looping samples
 
 ## Issues
 

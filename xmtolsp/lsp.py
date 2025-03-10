@@ -9,8 +9,8 @@ import numpy as np
 import sox
 import libxmplite
 from libxmplite import FrameInfo, ChannelInfo
-import xm
-from xm import Sample
+from .import xm
+from .xm import Sample
 
 
 @dataclass(frozen=True)
@@ -49,7 +49,7 @@ class LspSample:
     loop_length: int
     downsample_factor: float = 1
 
-    def __init__(self, smp: Sample, max_len: int, min_per: float, target_per: int, no_trim: bool, no_downsample: bool) -> None:
+    def __init__(self, smp: Sample, max_len: int, min_per: float, max_per: float, lsp: Lsp) -> None:
         """ smp: The XM sample.
             max_len: The max length this sample was detected to have been
                       played in the XM (used for truncating).
@@ -58,6 +58,13 @@ class LspSample:
             target_per: The target period to downsample to.
             no_trim: Do not trim this sample at the max length.
             no_downsample: Do not downsample this sample."""
+        target_per = lsp.min_per
+        optimal_per = lsp.optimal_per
+        no_trim = lsp.no_trim
+        no_downsample = lsp.no_downsample
+        if optimal_per / target_per > max_per / min_per:
+            target_per = optimal_per
+            min_per = max_per
         if max_len == 0:
             self.sample_data = bytes()
             self.length = 0
@@ -286,17 +293,20 @@ class Lsp:
     no_downsample: bool
     no_trim: bool
     min_per: int
+    optimal_per: int
 
     def __init__(self,
                  input_file: Path,
                  ntsc: bool = False,
                  no_trim: bool = False,
                  no_downsample: bool = False,
-                 min_per: int = 124) -> None:
+                 min_per: int = 124,
+                 optimal_per: int = 160) -> None:
         self.ntsc = ntsc
         self.no_trim = no_trim
         self.no_downsample = no_downsample
         self.min_per = min_per
+        self.optimal_per = optimal_per
         xm_file = xm.load(str(input_file))
         self.bpm = xm_file.header.bpm
         self.xm_samples = [smp for inst in xm_file.instruments for smp in inst.samples]
@@ -332,6 +342,7 @@ class Lsp:
         max_lens = [0] * sample_count
         len_per_frame = [0] * sample_count
         min_pers = [65535.0] * sample_count
+        max_pers = [0.0] * sample_count
         # Get max length per frame of each sample (taking BPM and pitch into
         # account) and max position of each sample, which is usually less than
         # actual max because we only have the position as it is on the end of
@@ -351,17 +362,18 @@ class Lsp:
                 s = chan.sample
                 len_per_frame[s] = max(samples_per_frame, len_per_frame[s])
                 min_pers[s] = min(period, min_pers[s])
+                max_pers[s] = max(period, max_pers[s])
                 max_lens[s] = max(chan.position, max_lens[s])
         # Now, round up max_lens to the next frame using len_per_frame
         for i in range(sample_count):
             if len_per_frame[i] == 0:
                 continue
             lpf = len_per_frame[i]
-            max_lens[i] = lpf * int(max_lens[i] / lpf) + lpf
+            max_lens[i] += lpf
         # Build samples. Starting offset 4 accounts for .lsbank 4-byte header.
         samples: list[LspSample] = []
-        for xm_smp, max_len, min_per in zip(self.xm_samples, max_lens, min_pers):
-            samples.append(LspSample(xm_smp, max_len, min_per, self.min_per, self.no_trim, self.no_downsample))
+        for xm_smp, max_len, min_per, max_per in zip(self.xm_samples, max_lens, min_pers, max_pers):
+            samples.append(LspSample(xm_smp, max_len, min_per, max_per, self))
         return samples
 
     def _get_frames(self) -> list[LspFrame]:
